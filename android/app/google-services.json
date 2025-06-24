@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "613122961687",
+    "firebase_url": "https://lingo-19e2a-default-rtdb.firebaseio.com",
+    "project_id": "lingo-19e2a",
+    "storage_bucket": "lingo-19e2a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:613122961687:android:ac5caf8d5028860009c752",
+        "android_client_info": {
+          "package_name": "com.example.lingo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALe3m0I992ylVVq4MBU27h_vokJRJNU9I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
