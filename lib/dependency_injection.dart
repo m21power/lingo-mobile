@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:get_it/get_it.dart' as get_it;
 import 'package:http/http.dart' as http;
 import 'package:lingo/core/network/network_info_impl.dart';
@@ -8,6 +9,17 @@ import 'package:lingo/features/auth/domain/usecase/check_otp_usecase.dart';
 import 'package:lingo/features/auth/domain/usecase/is_logged_in_usecase.dart';
 import 'package:lingo/features/auth/domain/usecase/wake_up_usecase.dart';
 import 'package:lingo/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:lingo/features/chat/data/repository/chat_repo_impl.dart';
+import 'package:lingo/features/chat/data/repository/message_repo_impl.dart';
+import 'package:lingo/features/chat/domain/repository/chat_repository.dart';
+import 'package:lingo/features/chat/domain/repository/message_repository.dart';
+import 'package:lingo/features/chat/domain/usecase/get_chats_usecase.dart';
+import 'package:lingo/features/chat/domain/usecase/get_messages_usecase.dart';
+import 'package:lingo/features/chat/domain/usecase/listen_to_chat_usecase.dart';
+import 'package:lingo/features/chat/domain/usecase/listen_to_messages.dart';
+import 'package:lingo/features/chat/domain/usecase/send_messages_usecase.dart';
+import 'package:lingo/features/chat/presentation/bloc/chat/chat_bloc.dart';
+import 'package:lingo/features/chat/presentation/bloc/message/message_bloc.dart';
 import 'package:lingo/features/profile/data/repository/profile_repo_impl.dart';
 import 'package:lingo/features/profile/domain/repository/profile_repo.dart';
 import 'package:lingo/features/profile/domain/usecase/get_consistency_usecase.dart';
@@ -28,6 +40,7 @@ Future<void> init() async {
   sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
   // firebase
   sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance);
+  sl.registerLazySingleton<FirebaseDatabase>(() => FirebaseDatabase.instance);
   //auth
   // repository
   sl.registerLazySingleton<AuthRepo>(
@@ -89,6 +102,50 @@ Future<void> init() async {
       getConsistencyUsecase: sl(),
       getRanksUsecase: sl(),
       getUserUsecase: sl(),
+    ),
+  );
+  // chats
+  // repository
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepoImpl(
+      firebaseDatabase: sl(),
+      networkInfo: sl(),
+      sharedPreferences: sl(),
+    ),
+  );
+  // usecases
+  sl.registerLazySingleton<GetChatsUsecase>(
+    () => GetChatsUsecase(chatRepository: sl()),
+  );
+  sl.registerLazySingleton<ListenToChatUsecase>(
+    () => ListenToChatUsecase(chatRepository: sl()),
+  );
+  // bloc
+  sl.registerFactory<ChatBloc>(
+    () => ChatBloc(getChatsUsecase: sl(), listenToChatUsecase: sl()),
+  );
+
+  // messages
+  // repository
+  sl.registerLazySingleton<MessageRepository>(
+    () => MessageRepoImpl(firebaseDatabase: sl(), networkInfo: sl()),
+  );
+  // usecases
+  sl.registerLazySingleton<GetMessagesUsecase>(
+    () => GetMessagesUsecase(messageRepository: sl()),
+  );
+  sl.registerLazySingleton<ListenToMessages>(
+    () => ListenToMessages(messageRepository: sl()),
+  );
+  sl.registerLazySingleton<SendMessagesUsecase>(
+    () => SendMessagesUsecase(messageRepository: sl()),
+  );
+  // bloc
+  sl.registerFactory<MessageBloc>(
+    () => MessageBloc(
+      getMessagesUsecase: sl(),
+      listenToMessages: sl(),
+      sendMessagesUsecase: sl(),
     ),
   );
 }

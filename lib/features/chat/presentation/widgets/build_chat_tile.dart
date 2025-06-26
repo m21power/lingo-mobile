@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import 'package:lingo/features/chat/domain/entities/chat_model.dart';
+import 'package:lingo/features/chat/domain/entities/message_model.dart';
+import 'package:lingo/features/chat/presentation/bloc/message/message_bloc.dart';
 import 'package:lingo/features/chat/presentation/pages/chat_page.dart';
+import 'package:lingo/features/chat/presentation/pages/conversation_page.dart';
 
 class BuildChatTile extends StatelessWidget {
-  ChatUserModel chat;
+  ChatModel chat;
   BuildChatTile({super.key, required this.chat});
 
   @override
@@ -10,7 +16,8 @@ class BuildChatTile extends StatelessWidget {
     return buildChatTile(context, chat);
   }
 
-  Widget buildChatTile(BuildContext context, ChatUserModel chat) {
+  List<MessageModel> sampleMessages = [];
+  Widget buildChatTile(BuildContext context, ChatModel chat) {
     const String currentUser = "Mesay";
 
     final filteredImages = chat.isGroup
@@ -18,13 +25,19 @@ class BuildChatTile extends StatelessWidget {
         : chat.participantImages
               .asMap()
               .entries
-              .where((entry) => chat.participantNames[entry.key] != currentUser)
+              .where(
+                (entry) => chat.participantUsernames[entry.key] != currentUser,
+              )
               .map((entry) => entry.value)
               .toList();
-
     return InkWell(
       onTap: () {
-        // TODO: Navigate to chat conversation screen
+        context.read<MessageBloc>().add(GetMessagesEvent(chat.chatId));
+        context.read<MessageBloc>().add(ListenToMessagesEvent(chat.chatId));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ConversationPage(chat: chat)),
+        );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -54,7 +67,7 @@ class BuildChatTile extends StatelessWidget {
                                       child: CircleAvatar(
                                         radius: 20,
                                         backgroundColor: Colors.grey[800],
-                                        backgroundImage: AssetImage(image),
+                                        backgroundImage: NetworkImage(image),
                                         onBackgroundImageError: (_, __) =>
                                             const Icon(
                                               Icons.person,
@@ -84,7 +97,7 @@ class BuildChatTile extends StatelessWidget {
                     ? CircleAvatar(
                         radius: 28,
                         backgroundColor: Colors.grey[800],
-                        backgroundImage: AssetImage(filteredImages.first),
+                        backgroundImage: NetworkImage(filteredImages.first),
                         onBackgroundImageError: (_, __) => const Icon(
                           Icons.person,
                           color: Colors.white,
@@ -144,7 +157,7 @@ class BuildChatTile extends StatelessWidget {
                             ),
                           const SizedBox(width: 8),
                           Text(
-                            chat.lastMessageTime,
+                            formatChatTimestamp(chat.lastMessageTime),
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,
@@ -227,5 +240,22 @@ class BuildChatTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String formatChatTimestamp(DateTime dateTime) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final date = DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+    if (date == today) {
+      // Same day → return time only
+      return DateFormat('h:mm a').format(dateTime); // e.g., 4:20 PM
+    } else if (today.difference(date).inDays == 1) {
+      return "Yesterday";
+    } else if (today.difference(date).inDays < 7) {
+      return DateFormat.E().format(dateTime); // e.g., Mon, Tue
+    } else {
+      return DateFormat('MMM d').format(dateTime); // e.g., Mar 21
+    }
   }
 }

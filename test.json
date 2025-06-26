@@ -1,0 +1,26 @@
+/chats/
+  {chatId}/
+    name: "Mesay & Mike"
+    participantIds: [12, 45]
+    participantUsernames: ["mesay", "mike"]
+    participantImages: ["url1", "url2"]
+    lastMessage: "Yo"
+    lastMessageTime: 1723844000
+    isGroup: false
+    seenBy: ["12"]
+    unreadCounts:
+      12: 0
+      45: 1
+
+/messages/
+  {chatId}/
+    {messageId}/
+      id: "msg123"
+      text: "Hello"
+      senderId: 12
+      senderName: "mesay"
+      createdAt: 1723844000
+      seenBy: ["12"]
+      isSystemMessage: false
+
+      
