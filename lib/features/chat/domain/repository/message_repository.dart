@@ -10,4 +10,9 @@ abstract class MessageRepository {
     String chatId,
     List<int> participantIds,
   );
+  Future<Either<Failure, void>> setParticipatingStatus(
+    String chatId,
+    String username,
+    String messageId,
+  );
 }

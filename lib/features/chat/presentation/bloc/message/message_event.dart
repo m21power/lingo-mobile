@@ -22,3 +22,15 @@ final class ListenToMessagesEvent extends MessageEvent {
 
   const ListenToMessagesEvent(this.chatId);
 }
+
+final class SetParticipatingStatusEvent extends MessageEvent {
+  final String chatId;
+  final String userId;
+  final String messageId;
+
+  const SetParticipatingStatusEvent({
+    required this.chatId,
+    required this.userId,
+    required this.messageId,
+  });
+}

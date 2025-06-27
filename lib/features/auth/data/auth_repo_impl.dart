@@ -3,6 +3,7 @@ import 'dart:ffi';
 
 import 'package:dartz/dartz.dart';
 import 'package:lingo/core/constant/api_constant.dart';
+import 'package:lingo/core/constant/client_constant.dart';
 import 'package:lingo/core/constant/shared_preference_constant.dart';
 import 'package:lingo/core/error/failure.dart';
 import 'package:lingo/core/network/network_info_impl.dart';
@@ -48,6 +49,7 @@ class AuthRepoImpl implements AuthRepo {
             SharedPreferenceConstant.isLoggedIn,
             true,
           );
+          await Client.initFromPrefs();
           return Right(user);
         } else {
           return Left(ServerFailure(message: data["error"]));

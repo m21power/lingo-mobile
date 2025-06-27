@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:lingo/core/constant/client_constant.dart';
+
 class ChatModel {
   final String chatId;
   final String name;
@@ -66,9 +68,10 @@ class ChatModel {
     };
   }
 
-  factory ChatModel.fromMap(Map<String, dynamic> map) {
+  factory ChatModel.fromMap(Map<String, dynamic> map, String chatId) {
+    print("ChatModel.fromMap: $map");
     return ChatModel(
-      chatId: map['chatId'] as String,
+      chatId: chatId,
       name: map['name'] as String,
       participantUsernames: List<String>.from(
         map['participantUsernames'] as List,
@@ -83,12 +86,13 @@ class ChatModel {
       seenBy: map['seenBy'] != null
           ? List<String>.from(map['seenBy'] as List)
           : [],
-      unreadCount: map["unreadCounts"]["12"],
+      unreadCount:
+          map["unreadCounts"][Client.instance.id.toString()] as int? ?? 0,
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory ChatModel.fromJson(String source) =>
-      ChatModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  // factory ChatModel.fromJson(String source) =>
+  //     ChatModel.fromMap(json.decode(source) as Map<String, dynamic>);
 }

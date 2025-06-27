@@ -18,6 +18,7 @@ import 'package:lingo/features/chat/domain/usecase/get_messages_usecase.dart';
 import 'package:lingo/features/chat/domain/usecase/listen_to_chat_usecase.dart';
 import 'package:lingo/features/chat/domain/usecase/listen_to_messages.dart';
 import 'package:lingo/features/chat/domain/usecase/send_messages_usecase.dart';
+import 'package:lingo/features/chat/domain/usecase/set_participating_status_usecase.dart';
 import 'package:lingo/features/chat/presentation/bloc/chat/chat_bloc.dart';
 import 'package:lingo/features/chat/presentation/bloc/message/message_bloc.dart';
 import 'package:lingo/features/profile/data/repository/profile_repo_impl.dart';
@@ -128,7 +129,11 @@ Future<void> init() async {
   // messages
   // repository
   sl.registerLazySingleton<MessageRepository>(
-    () => MessageRepoImpl(firebaseDatabase: sl(), networkInfo: sl()),
+    () => MessageRepoImpl(
+      firebaseDatabase: sl(),
+      networkInfo: sl(),
+      client: sl(),
+    ),
   );
   // usecases
   sl.registerLazySingleton<GetMessagesUsecase>(
@@ -140,12 +145,16 @@ Future<void> init() async {
   sl.registerLazySingleton<SendMessagesUsecase>(
     () => SendMessagesUsecase(messageRepository: sl()),
   );
+  sl.registerLazySingleton<SetParticipatingStatusUsecase>(
+    () => SetParticipatingStatusUsecase(messageRepository: sl()),
+  );
   // bloc
   sl.registerFactory<MessageBloc>(
     () => MessageBloc(
       getMessagesUsecase: sl(),
       listenToMessages: sl(),
       sendMessagesUsecase: sl(),
+      setParticipatingStatusUsecase: sl(),
     ),
   );
 }

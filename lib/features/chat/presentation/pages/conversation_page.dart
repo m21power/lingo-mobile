@@ -5,11 +5,18 @@ import 'package:lingo/core/constant/client_constant.dart';
 import 'package:lingo/features/chat/domain/entities/chat_model.dart';
 import 'package:lingo/features/chat/domain/entities/message_model.dart';
 import 'package:lingo/features/chat/presentation/bloc/message/message_bloc.dart';
+import 'package:lingo/features/chat/presentation/widgets/build_conversatioin_bubble.dart';
+import 'package:lingo/features/chat/presentation/widgets/profile_picture.dart';
 
 class ConversationPage extends StatefulWidget {
+  final List<String> filteredImages;
   final ChatModel chat;
 
-  const ConversationPage({required this.chat, super.key});
+  const ConversationPage({
+    required this.chat,
+    required this.filteredImages,
+    super.key,
+  });
 
   @override
   State<ConversationPage> createState() => _ConversationPageState();
@@ -19,13 +26,11 @@ class _ConversationPageState extends State<ConversationPage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _messageController = TextEditingController();
 
-  String? pinnedMessageId;
-
-  void scrollToSystemMessage(String messageId, List<MessageModel> messages) {
-    final index = messages.indexWhere((msg) => msg.id == messageId);
+  void scrollToSystemMessage(List<MessageModel> messages) {
+    final index = messages.indexWhere((msg) => msg.isSystemMessage == true);
     if (index != -1) {
       _scrollController.animateTo(
-        index * 100,
+        index * 90,
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
@@ -36,13 +41,14 @@ class _ConversationPageState extends State<ConversationPage> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
     MessageModel newMessage = MessageModel(
-      id: DateTime.now().toIso8601String(), // Generate a unique ID
+      isParticipating: [],
+      id: DateTime.now().toIso8601String(),
       text: text,
-      senderId: 12, // or your Client.id
-      senderName: "Mesay", // or your Client.username
+      senderId: Client.instance.id!,
+      senderName: Client.instance.username ?? "Unknown",
       createdAt: DateTime.now(),
-      seenBy: [], // Initially empty, update as needed
-      isSystemMessage: false, // Set to true if it's a system message
+      seenBy: [],
+      isSystemMessage: false,
     );
     context.read<MessageBloc>().add(
       SendMessageEvent(
@@ -53,93 +59,6 @@ class _ConversationPageState extends State<ConversationPage> {
     );
 
     _messageController.clear();
-  }
-
-  Widget _buildMessageBubble(MessageModel message) {
-    // later we will be using sender id
-    final isMe = message.senderName == "mesay";
-
-    if (message.isSystemMessage) {
-      return GestureDetector(
-        onTap: () => setState(() => pinnedMessageId = message.id),
-        child: Center(
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.grey[700],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              message.text,
-              style: const TextStyle(
-                fontStyle: FontStyle.italic,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
-        ),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: isMe
-                ? const Color.fromARGB(255, 87, 119, 145)
-                : Colors.grey[800],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: isMe
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!isMe)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: CircleAvatar(
-                        radius: 18,
-                        backgroundImage: NetworkImage(
-                          widget.chat.participantImages.first,
-                        ),
-                        backgroundColor: Colors.grey[800],
-                        onBackgroundImageError: (_, __) =>
-                            const Icon(Icons.person),
-                      ),
-                    ),
-                  Flexible(
-                    child: Text(
-                      message.text,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 5),
-              Text(
-                "Seen by: ${message.seenBy.join(', ')}",
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
-              ),
-              Text(
-                DateFormat('hh:mm a').format(message.createdAt),
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   @override
@@ -154,16 +73,19 @@ class _ConversationPageState extends State<ConversationPage> {
         ),
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundImage: NetworkImage(
-                widget.chat.participantImages.first,
-              ),
-              backgroundColor: Colors.grey[800],
+            ProfilePicture(
+              filteredImages: widget.filteredImages,
+              isGroup: widget.chat.isGroup,
             ),
             const SizedBox(width: 10),
             Text(
-              widget.chat.name,
+              widget.chat.participantIds.length == 2
+                  ? widget.chat.participantUsernames.firstWhere(
+                      (name) => name != Client.instance.username,
+                    )
+                  : widget.chat.participantUsernames
+                        .where((name) => name != Client.instance.username)
+                        .join(" and "),
               style: const TextStyle(color: Colors.white, fontSize: 18),
             ),
           ],
@@ -186,16 +108,6 @@ class _ConversationPageState extends State<ConversationPage> {
             return const Center(child: CircularProgressIndicator());
           } else if (state is MessageLoaded) {
             messages = state.messages;
-          } else if (state is MessageError) {
-            // ScaffoldMessenger.of(context).showSnackBar(
-            //   SnackBar(
-            //     backgroundColor: Colors.red,
-            //     content: Text(
-            //       state.message,
-            //       style: TextStyle(color: Colors.white),
-            //     ),
-            //   ),
-            // );
           }
           return Stack(
             children: [
@@ -214,7 +126,10 @@ class _ConversationPageState extends State<ConversationPage> {
                             controller: _scrollController,
                             itemCount: messages.length,
                             itemBuilder: (context, index) =>
-                                _buildMessageBubble(messages[index]),
+                                BuildConversatioinBubble(
+                                  message: messages[index],
+                                  chat: widget.chat,
+                                ),
                           ),
                   ),
 
@@ -258,46 +173,36 @@ class _ConversationPageState extends State<ConversationPage> {
                 ],
               ),
 
-              // Pinned message
-              if (pinnedMessageId != null)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: GestureDetector(
-                    onTap: () =>
-                        scrollToSystemMessage(pinnedMessageId!, messages),
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      color: Colors.grey[850],
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.push_pin,
-                            color: Colors.amber,
-                            size: 18,
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: () => scrollToSystemMessage(messages),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    color: Colors.grey[850],
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.push_pin,
+                          color: Colors.amber,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            "Daily Pair. Tap to scroll.",
+                            style: TextStyle(color: Colors.white),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(width: 8),
-                          const Expanded(
-                            child: Text(
-                              "Pinned message. Tap to scroll.",
-                              style: TextStyle(color: Colors.white),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
+              ),
             ],
-          );
-
-          return const Center(
-            child: Text(
-              "Something went wrong",
-              style: TextStyle(color: Colors.white),
-            ),
           );
         },
       ),

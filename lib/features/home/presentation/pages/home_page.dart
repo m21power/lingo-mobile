@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:lingo/features/chat/presentation/pages/chat_page.dart';
-import 'package:lingo/features/notification/presentation/pages/notification_page.dart';
+import 'package:lingo/features/About/presentation/pages/about_page.dart';
 import 'package:lingo/features/profile/presentation/pages/profile_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -13,7 +13,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [ProfilePage(), ChatPage(), NotificationPage()];
+  final List<Widget> _pages = [ProfilePage(), ChatPage(), AboutPage()];
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +75,7 @@ class _HomePageState extends State<HomePage> {
                 tabs: const [
                   GButton(icon: Icons.person, text: 'Profile'),
                   GButton(icon: Icons.chat, text: 'Chat'),
-                  GButton(icon: Icons.notifications, text: 'Alerts'),
+                  GButton(icon: Icons.info, text: 'About'),
                 ],
               ),
             ),

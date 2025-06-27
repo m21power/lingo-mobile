@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
+import 'package:lingo/core/constant/client_constant.dart';
 import 'package:lingo/core/constant/shared_preference_constant.dart';
 import 'package:lingo/core/error/failure.dart';
 import 'package:lingo/core/network/network_info_impl.dart';
@@ -244,6 +245,7 @@ class ProfileRepoImpl implements ProfileRepo {
             SharedPreferenceConstant.userKey,
             jsonEncode(userFromFirestore.toMap()),
           );
+          await Client.instance.updateFields(nickname: nickname);
           return Right(null);
         } else {
           throw Exception('User not found');

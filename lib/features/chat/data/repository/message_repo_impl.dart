@@ -1,14 +1,24 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:lingo/core/constant/api_constant.dart';
+import 'package:lingo/core/constant/client_constant.dart';
 import 'package:lingo/core/error/failure.dart';
 import 'package:lingo/core/network/network_info_impl.dart';
 import 'package:lingo/features/chat/domain/entities/message_model.dart';
 import 'package:lingo/features/chat/domain/repository/message_repository.dart';
+import 'package:http/http.dart' as http;
 
 class MessageRepoImpl implements MessageRepository {
   final FirebaseDatabase firebaseDatabase;
   final NetworkInfo networkInfo;
-  MessageRepoImpl({required this.firebaseDatabase, required this.networkInfo});
+  final http.Client client;
+  MessageRepoImpl({
+    required this.firebaseDatabase,
+    required this.networkInfo,
+    required this.client,
+  });
   @override
   Future<Either<Failure, List<MessageModel>>> getMessages(String chatId) async {
     if (await networkInfo.isConnected) {
@@ -34,7 +44,7 @@ class MessageRepoImpl implements MessageRepository {
                     )
               : <String, dynamic>{};
           final List<MessageModel> messages = messagesData.entries.map((entry) {
-            return MessageModel.fromMap(entry.value);
+            return MessageModel.fromMap(entry.value, entry.key);
           }).toList();
           messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
           return Right(messages);
@@ -71,7 +81,7 @@ class MessageRepoImpl implements MessageRepository {
                   )
             : <String, dynamic>{};
         final List<MessageModel> messages = messagesData.entries.map((entry) {
-          return MessageModel.fromMap(entry.value);
+          return MessageModel.fromMap(entry.value, entry.key);
         }).toList();
         messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
         return messages;
@@ -122,6 +132,57 @@ class MessageRepoImpl implements MessageRepository {
       return Future.value(
         Left(ServerFailure(message: 'No internet connection')),
       );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> setParticipatingStatus(
+    String chatId,
+    String userId,
+    String messageId,
+  ) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final systemMessageRef = firebaseDatabase.ref(
+          "messages/$chatId/$messageId",
+        );
+        final snapshot = await systemMessageRef.get();
+
+        if (snapshot.exists) {
+          final message = MessageModel.fromMap(
+            Map<String, dynamic>.from(snapshot.value as Map),
+            messageId,
+          );
+
+          if (!message.isParticipating.contains(Client.instance.username)) {
+            message.isParticipating.add(Client.instance.username ?? "Unknown");
+            await systemMessageRef.update({
+              'isParticipating': message.isParticipating,
+            });
+          }
+        }
+
+        var uri = Uri.parse("${ApiConstant.baseUrl}/api/v1/pair");
+        var response = await client.post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'pairId': chatId,
+            'userId': int.parse(userId),
+            "isParticipating": true,
+          }),
+        );
+        if (response.statusCode != 200) {
+          return Left(ServerFailure(message: 'Failed to update status'));
+        }
+
+        // we should call the backend endpoint here too
+        return Right(null);
+      } catch (e) {
+        return Left(ServerFailure(message: e.toString()));
+      }
+    } else {
+      return Left(ServerFailure(message: 'No internet connection'));
     }
   }
 }

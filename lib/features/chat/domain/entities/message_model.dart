@@ -8,6 +8,7 @@ class MessageModel {
   final DateTime createdAt;
   final List<String> seenBy;
   final bool isSystemMessage;
+  final List<String> isParticipating;
 
   MessageModel({
     required this.id,
@@ -17,6 +18,7 @@ class MessageModel {
     required this.createdAt,
     required this.seenBy,
     required this.isSystemMessage,
+    required this.isParticipating,
   });
 
   MessageModel copyWith({
@@ -27,6 +29,7 @@ class MessageModel {
     DateTime? createdAt,
     List<String>? seenBy,
     bool? isSystemMessage,
+    List<String>? isParticipating,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -36,6 +39,7 @@ class MessageModel {
       createdAt: createdAt ?? this.createdAt,
       seenBy: seenBy ?? this.seenBy,
       isSystemMessage: isSystemMessage ?? this.isSystemMessage,
+      isParticipating: isParticipating ?? this.isParticipating,
     );
   }
 
@@ -48,25 +52,29 @@ class MessageModel {
       'createdAt': createdAt.millisecondsSinceEpoch,
       'seenBy': seenBy,
       'isSystemMessage': isSystemMessage,
+      'isParticipating': isParticipating,
     };
   }
 
-  factory MessageModel.fromMap(Map<String, dynamic> map) {
+  factory MessageModel.fromMap(Map<String, dynamic> map, String id) {
     print("***************");
     print(map);
     return MessageModel(
-      id: map['id'] as String,
+      id: id,
       text: map['text'] as String,
       senderName: map['senderName'] as String,
       senderId: map['senderId'] as int,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
       seenBy: map['seenBy'] != null ? List<String>.from(map['seenBy']) : [],
       isSystemMessage: map['isSystemMessage'] as bool? ?? false,
+      isParticipating: map['isParticipating'] != null
+          ? List<String>.from(map['isParticipating'])
+          : [],
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory MessageModel.fromJson(String source) =>
-      MessageModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  // factory MessageModel.fromJson(String source) =>
+  //     MessageModel.fromMap(json.decode(source) as Map<String, dynamic>);
 }

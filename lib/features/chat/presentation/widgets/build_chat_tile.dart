@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:lingo/core/constant/client_constant.dart';
 import 'package:lingo/features/chat/domain/entities/chat_model.dart';
 import 'package:lingo/features/chat/domain/entities/message_model.dart';
 import 'package:lingo/features/chat/presentation/bloc/message/message_bloc.dart';
 import 'package:lingo/features/chat/presentation/pages/chat_page.dart';
 import 'package:lingo/features/chat/presentation/pages/conversation_page.dart';
+import 'package:lingo/features/chat/presentation/widgets/profile_picture.dart';
 
 class BuildChatTile extends StatelessWidget {
   ChatModel chat;
@@ -18,15 +20,15 @@ class BuildChatTile extends StatelessWidget {
 
   List<MessageModel> sampleMessages = [];
   Widget buildChatTile(BuildContext context, ChatModel chat) {
-    const String currentUser = "Mesay";
-
     final filteredImages = chat.isGroup
-        ? chat.participantImages
+        ? chat.participantImages.where((img) => img.isNotEmpty).toList()
         : chat.participantImages
               .asMap()
               .entries
               .where(
-                (entry) => chat.participantUsernames[entry.key] != currentUser,
+                (entry) =>
+                    entry.value.isNotEmpty &&
+                    entry.value != Client.instance.photoUrl,
               )
               .map((entry) => entry.value)
               .toList();
@@ -36,7 +38,10 @@ class BuildChatTile extends StatelessWidget {
         context.read<MessageBloc>().add(ListenToMessagesEvent(chat.chatId));
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ConversationPage(chat: chat)),
+          MaterialPageRoute(
+            builder: (context) =>
+                ConversationPage(chat: chat, filteredImages: filteredImages),
+          ),
         );
       },
       child: Container(
@@ -45,75 +50,9 @@ class BuildChatTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile Pictures
-            ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: SizedBox(
-                width: 56,
-                height: 56,
-                child: chat.isGroup
-                    ? Stack(
-                        clipBehavior: Clip.hardEdge,
-                        children: filteredImages.isNotEmpty
-                            ? filteredImages
-                                  .take(2)
-                                  .toList()
-                                  .asMap()
-                                  .entries
-                                  .map((entry) {
-                                    final i = entry.key;
-                                    final image = entry.value;
-                                    return Positioned(
-                                      left: i * 20.0,
-                                      child: CircleAvatar(
-                                        radius: 20,
-                                        backgroundColor: Colors.grey[800],
-                                        backgroundImage: NetworkImage(image),
-                                        onBackgroundImageError: (_, __) =>
-                                            const Icon(
-                                              Icons.person,
-                                              color: Colors.white,
-                                              size: 20,
-                                            ),
-                                      ),
-                                    );
-                                  })
-                                  .toList()
-                            : [
-                                const Positioned(
-                                  left: 0,
-                                  child: CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: Colors.grey,
-                                    child: Icon(
-                                      Icons.group,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                      )
-                    : filteredImages.isNotEmpty
-                    ? CircleAvatar(
-                        radius: 28,
-                        backgroundColor: Colors.grey[800],
-                        backgroundImage: NetworkImage(filteredImages.first),
-                        onBackgroundImageError: (_, __) => const Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      )
-                    : const CircleAvatar(
-                        radius: 28,
-                        backgroundColor: Colors.grey,
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
-              ),
+            ProfilePicture(
+              filteredImages: filteredImages,
+              isGroup: chat.isGroup,
             ),
             const SizedBox(width: 12),
 
@@ -127,7 +66,16 @@ class BuildChatTile extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          chat.name,
+                          chat.participantIds.length == 2
+                              ? chat.participantUsernames.firstWhere(
+                                  (name) => name != Client.instance.username,
+                                )
+                              : chat.participantUsernames
+                                    .where(
+                                      (name) =>
+                                          name != Client.instance.username,
+                                    )
+                                    .join(" and "),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,

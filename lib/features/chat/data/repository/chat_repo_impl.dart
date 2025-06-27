@@ -4,10 +4,8 @@ import 'dart:convert';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:lingo/core/constant/client_constant.dart';
-import 'package:lingo/core/constant/shared_preference_constant.dart';
 import 'package:lingo/core/error/failure.dart';
 import 'package:lingo/core/network/network_info_impl.dart';
-import 'package:lingo/features/auth/domain/entities/user.dart';
 import 'package:lingo/features/chat/domain/entities/chat_model.dart';
 import 'package:lingo/features/chat/domain/repository/chat_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,21 +23,9 @@ class ChatRepoImpl implements ChatRepository {
   Future<Either<Failure, List<ChatModel>>> getChats() async {
     if (await networkInfo.isConnected) {
       try {
-        print("testing ---------------------------------");
-        print(Client.instance.attendance);
-        print(Client.instance.id);
-        print(Client.instance.username);
-        print(Client.instance.photoUrl);
-        var user = sharedPreferences.getString(
-          SharedPreferenceConstant.userKey,
+        final userChatIdsRef = firebaseDatabase.ref(
+          "userChats/${Client.instance.id.toString()}",
         );
-        if (user == null) {
-          return Left(ServerFailure(message: 'User not found'));
-        }
-        User u = User.fromMap(jsonDecode(user));
-        final myUserId = "45";
-
-        final userChatIdsRef = firebaseDatabase.ref("userChats/$myUserId");
 
         final chatIdsSnapshot = await userChatIdsRef.get();
         final chatIds = (chatIdsSnapshot.value as Map?)?.keys ?? [];
@@ -54,7 +40,10 @@ class ChatRepoImpl implements ChatRepository {
               .get();
           if (chatSnapshot.exists) {
             allChats.add(
-              ChatModel.fromMap(chatSnapshot.value as Map<String, dynamic>),
+              ChatModel.fromMap(
+                chatSnapshot.value as Map<String, dynamic>,
+                chatId,
+              ),
             );
           }
         }
@@ -74,17 +63,9 @@ class ChatRepoImpl implements ChatRepository {
 
   @override
   Stream<List<ChatModel>> listenToChats() async* {
-    final user = sharedPreferences.getString(SharedPreferenceConstant.userKey);
-
-    if (user == null) {
-      throw Exception('User not found');
-    }
-
-    final User u = User.fromMap(jsonDecode(user));
-    // final String myUserId = u.id.toString();
-    final String myUserId = "12"; // For testing, replace with actual user ID
-
-    final userChatIdsRef = firebaseDatabase.ref("userChats/$myUserId");
+    final userChatIdsRef = firebaseDatabase.ref(
+      "userChats/${Client.instance.id.toString()}",
+    );
     final chatIdsSnapshot = await userChatIdsRef.get();
 
     final chatIds = (chatIdsSnapshot.value as Map?)?.keys.toList() ?? [];
@@ -105,7 +86,7 @@ class ChatRepoImpl implements ChatRepository {
           final chatData = Map<String, dynamic>.from(
             event.snapshot.value as Map,
           );
-          final chat = ChatModel.fromMap(chatData);
+          final chat = ChatModel.fromMap(chatData, chatId);
 
           // Replace or insert the chat in the list
           final index = chats.indexWhere((c) => c.chatId == chat.chatId);
