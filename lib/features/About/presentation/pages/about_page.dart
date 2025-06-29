@@ -5,7 +5,7 @@ class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
   void _launchTelegram() async {
-    const telegramUrl = 'https://t.me/JmbTalks'; // your channel
+    const telegramUrl = 'https://t.me/JmbTalks';
     if (await canLaunchUrl(Uri.parse(telegramUrl))) {
       await launchUrl(
         Uri.parse(telegramUrl),
@@ -18,82 +18,137 @@ class AboutPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 15),
-        child: ListView(
-          children: [
-            const Text(
-              textAlign: TextAlign.center,
-              "Welcome to Lingo 👋",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Lingo helps you grow your communication skills by matching you with peers who share similar interests. Whether it's preparing for interviews, boosting fluency, or meaningful conversations — you’ll always have someone to practice with.",
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              "✨ Features",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              "🚀 Daily AI-powered partner matching\n🧠 Smart reminders to keep you consistent\n💬 Real-time chat & feedback\n🌍 Connect with people across the globe",
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-                height: 1.6,
-              ),
-            ),
-            const SizedBox(height: 40),
-            const Divider(color: Colors.white24),
-            const SizedBox(height: 16),
-            const Text(
-              "Join My Telegram channel 📢",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              "Stay up to date with the latest news, feature drops, and improvements from Lingo by joining our Telegram channel.",
-              style: TextStyle(color: Colors.white70, fontSize: 15),
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: _launchTelegram,
-                icon: const Icon(Icons.telegram, color: Colors.white),
-                label: const Text(
-                  "Join Channel",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
+      appBar: AppBar(
+        title: const Text(
+          "About Lingo",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        centerTitle: true,
+        backgroundColor: const Color(0xFF121212),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
+        children: [
+          Center(
+            child: Column(
+              children: const [
+                Text(
+                  "Welcome to Lingo 👋",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+                SizedBox(height: 12),
+                Text(
+                  "Your daily partner for practicing real English conversations.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 15.5,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  "✨ Features",
+                  style: TextStyle(
+                    color: Colors.tealAccent,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 16),
+                FeatureItem(text: "🚀 Daily AI-powered partner matching"),
+                FeatureItem(text: "🧠 Smart reminders to stay consistent"),
+                FeatureItem(text: "💬 Real-time chat and instant feedback"),
+                FeatureItem(text: "🌍 Connect with learners worldwide"),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 40),
+          const Divider(color: Colors.white24),
+          const SizedBox(height: 24),
+
+          const Text(
+            "📢 Stay Connected",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            "Join our Telegram channel for updates, new features, and community events.",
+            style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
+          ),
+          const SizedBox(height: 18),
+          Center(
+            child: ElevatedButton.icon(
+              onPressed: _launchTelegram,
+              icon: const Icon(Icons.telegram),
+              label: const Text(
+                "Join @JmbTalks",
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.tealAccent[700],
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
-            const SizedBox(height: 40),
-          ],
+          ),
+          const SizedBox(height: 30),
+        ],
+      ),
+    );
+  }
+}
+
+class FeatureItem extends StatelessWidget {
+  final String text;
+
+  const FeatureItem({super.key, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white70,
+          fontSize: 15.5,
+          height: 1.4,
         ),
       ),
     );

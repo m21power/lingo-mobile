@@ -229,49 +229,87 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Widget _buildStats(User? user) {
+    double missPercentage = user != null && user.missCount > 0
+        ? (user.missCount / (user.attendance + user.missCount)) * 100
+        : 0;
     double score =
         (user?.attendance ?? 0) * 5 +
         (user?.participatedCount ?? 0) * 2 -
         (user?.missCount ?? 0) * 3;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              "Attendance: ${user != null ? user.attendance : 0}",
-              style: TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-            SizedBox(width: 2),
-            Icon(FontAwesomeIcons.fire, color: Colors.orange, size: 14),
-          ],
-        ),
-        SizedBox(width: 15),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              "Missed: ${user != null ? user.missCount : 0}",
-              style: TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-            SizedBox(width: 2),
-            Icon(Icons.close, color: Colors.redAccent, size: 14),
-          ],
-        ),
-        SizedBox(width: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              "Score: ${score.toStringAsFixed(0)}",
-              style: TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-            SizedBox(width: 2),
-            Icon(Icons.star, color: Colors.orangeAccent, size: 14),
-          ],
-        ),
-      ],
+    return Center(
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 20,
+        runSpacing: 8,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Attendance: ${user != null ? user.attendance : 0}",
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              SizedBox(width: 2),
+              Icon(FontAwesomeIcons.fire, color: Colors.orange, size: 14),
+            ],
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Missed: ${user != null ? user.missCount : 0}",
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              SizedBox(width: 2),
+              Icon(Icons.close, color: Colors.redAccent, size: 14),
+            ],
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Score: ${score.toStringAsFixed(0)}",
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              SizedBox(width: 2),
+              Icon(Icons.star, color: Colors.orangeAccent, size: 14),
+            ],
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                missPercentage >= 75
+                    ? Icons
+                          .block // Red warning
+                    : missPercentage >= 50
+                    ? Icons
+                          .error // Orange warning
+                    : Icons.check_circle, // Green check
+                color: missPercentage >= 75
+                    ? Colors.red
+                    : missPercentage >= 50
+                    ? Colors.orange
+                    : Colors.green,
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                "Miss %: ${missPercentage.toStringAsFixed(0)}",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: missPercentage >= 75
+                      ? Colors.red
+                      : missPercentage >= 50
+                      ? Colors.orange
+                      : Colors.green,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

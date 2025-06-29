@@ -14,6 +14,7 @@ class ChatModel {
   final bool isGroup;
   final List<String> seenBy;
   final int unreadCount;
+  final DateTime? createdAt;
 
   ChatModel({
     required this.chatId,
@@ -27,6 +28,7 @@ class ChatModel {
     required this.seenBy,
     required this.unreadCount,
     required this.lastMessageId,
+    this.createdAt,
   });
 
   ChatModel copyWith({
@@ -41,6 +43,7 @@ class ChatModel {
     List<String>? seenBy,
     int? unreadCount,
     String? lastMessageId,
+    DateTime? createdAt,
   }) {
     return ChatModel(
       chatId: chatId ?? this.chatId,
@@ -54,6 +57,7 @@ class ChatModel {
       seenBy: seenBy ?? this.seenBy,
       unreadCount: unreadCount ?? this.unreadCount,
       lastMessageId: lastMessageId ?? this.lastMessageId,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -102,6 +106,9 @@ class ChatModel {
           : [],
       unreadCount:
           map["unreadCounts"][Client.instance.id.toString()] as int? ?? 0,
+      createdAt: map['createdAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int)
+          : null,
     );
   }
 
