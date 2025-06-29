@@ -34,3 +34,15 @@ final class SetParticipatingStatusEvent extends MessageEvent {
     required this.messageId,
   });
 }
+
+final class MarkMessageAsSeenEvent extends MessageEvent {
+  final String chatId;
+  final String messageId;
+  final String username;
+
+  const MarkMessageAsSeenEvent({
+    required this.chatId,
+    required this.messageId,
+    required this.username,
+  });
+}

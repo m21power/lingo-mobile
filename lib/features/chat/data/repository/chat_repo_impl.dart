@@ -39,19 +39,31 @@ class ChatRepoImpl implements ChatRepository {
               .ref("chats/$chatId")
               .get();
           if (chatSnapshot.exists) {
+            var chats = chatSnapshot.value as Map<dynamic, dynamic>;
+
+            final messageSnapshot = await firebaseDatabase
+                .ref("messages/$chatId/${chats["lastMessageId"]}")
+                .get();
+
+            final messageData = messageSnapshot.value as Map<dynamic, dynamic>?;
+
+            chats["seenBy"] = messageData?["seenBy"] ?? [];
+
             allChats.add(
               ChatModel.fromMap(
-                chatSnapshot.value as Map<String, dynamic>,
+                chats as Map<String, dynamic>, // safe to cast now
                 chatId,
               ),
             );
           }
         }
+
         if (allChats.isEmpty) {
           return Left(ServerFailure(message: 'No chats found'));
         }
         // Sort chats by last message time in descending order
         allChats.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+
         return Right(allChats);
       } catch (e) {
         return Left(ServerFailure(message: e.toString()));
@@ -86,17 +98,31 @@ class ChatRepoImpl implements ChatRepository {
           final chatData = Map<String, dynamic>.from(
             event.snapshot.value as Map,
           );
-          final chat = ChatModel.fromMap(chatData, chatId);
 
-          // Replace or insert the chat in the list
-          final index = chats.indexWhere((c) => c.chatId == chat.chatId);
-          if (index >= 0) {
-            chats[index] = chat;
-          } else {
-            chats.add(chat);
-          }
+          firebaseDatabase
+              .ref("messages/$chatId/${chatData["lastMessageId"]}")
+              .onValue
+              .listen((messageEvent) {
+                if (messageEvent.snapshot.exists) {
+                  final messageData = Map<String, dynamic>.from(
+                    messageEvent.snapshot.value as Map,
+                  );
+                  chatData["seenBy"] = messageData["seenBy"];
+                } else {
+                  chatData["seenBy"] = [];
+                }
 
-          controller.add(List.from(chats)); // Emit updated chat list
+                final chat = ChatModel.fromMap(chatData, chatId);
+
+                final index = chats.indexWhere((c) => c.chatId == chat.chatId);
+                if (index >= 0) {
+                  chats[index] = chat;
+                } else {
+                  chats.add(chat);
+                }
+
+                controller.add(List.from(chats));
+              });
         }
       });
     }

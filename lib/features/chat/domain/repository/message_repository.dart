@@ -15,4 +15,9 @@ abstract class MessageRepository {
     String username,
     String messageId,
   );
+  Future<Either<Failure, void>> setSeenBy(
+    String chatId,
+    String messageId,
+    String username,
+  );
 }

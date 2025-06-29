@@ -17,6 +17,7 @@ import 'package:lingo/features/chat/domain/usecase/get_chats_usecase.dart';
 import 'package:lingo/features/chat/domain/usecase/get_messages_usecase.dart';
 import 'package:lingo/features/chat/domain/usecase/listen_to_chat_usecase.dart';
 import 'package:lingo/features/chat/domain/usecase/listen_to_messages.dart';
+import 'package:lingo/features/chat/domain/usecase/mark_message_as_seen.dart';
 import 'package:lingo/features/chat/domain/usecase/send_messages_usecase.dart';
 import 'package:lingo/features/chat/domain/usecase/set_participating_status_usecase.dart';
 import 'package:lingo/features/chat/presentation/bloc/chat/chat_bloc.dart';
@@ -148,6 +149,9 @@ Future<void> init() async {
   sl.registerLazySingleton<SetParticipatingStatusUsecase>(
     () => SetParticipatingStatusUsecase(messageRepository: sl()),
   );
+  sl.registerLazySingleton<MarkMessageAsSeenUsecase>(
+    () => MarkMessageAsSeenUsecase(messageRepository: sl()),
+  );
   // bloc
   sl.registerFactory<MessageBloc>(
     () => MessageBloc(
@@ -155,6 +159,7 @@ Future<void> init() async {
       listenToMessages: sl(),
       sendMessagesUsecase: sl(),
       setParticipatingStatusUsecase: sl(),
+      markMessageAsSeenUsecase: sl(),
     ),
   );
 }

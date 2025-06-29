@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:lingo/core/constant/client_constant.dart';
 import 'package:lingo/features/chat/domain/entities/chat_model.dart';
 import 'package:lingo/features/chat/domain/entities/message_model.dart';
 import 'package:lingo/features/chat/presentation/bloc/message/message_bloc.dart';
 import 'package:lingo/features/chat/presentation/widgets/build_conversatioin_bubble.dart';
 import 'package:lingo/features/chat/presentation/widgets/profile_picture.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ConversationPage extends StatefulWidget {
   final List<String> filteredImages;
@@ -37,6 +37,16 @@ class _ConversationPageState extends State<ConversationPage> {
     }
   }
 
+  void _launchTelegram() async {
+    const telegramUrl = 'https://t.me/shinratensei_all'; // your channel
+    if (await canLaunchUrl(Uri.parse(telegramUrl))) {
+      await launchUrl(
+        Uri.parse(telegramUrl),
+        mode: LaunchMode.externalApplication,
+      );
+    }
+  }
+
   void sendMessage() {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
@@ -49,6 +59,7 @@ class _ConversationPageState extends State<ConversationPage> {
       createdAt: DateTime.now(),
       seenBy: [],
       isSystemMessage: false,
+      senderProfileImageUrl: Client.instance.photoUrl,
     );
     context.read<MessageBloc>().add(
       SendMessageEvent(

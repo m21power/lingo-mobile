@@ -5,6 +5,7 @@ import 'package:lingo/core/constant/client_constant.dart';
 class ChatModel {
   final String chatId;
   final String name;
+  final String lastMessageId;
   final List<String> participantUsernames;
   final List<int> participantIds;
   final List<String> participantImages;
@@ -25,6 +26,7 @@ class ChatModel {
     required this.isGroup,
     required this.seenBy,
     required this.unreadCount,
+    required this.lastMessageId,
   });
 
   ChatModel copyWith({
@@ -38,6 +40,7 @@ class ChatModel {
     bool? isGroup,
     List<String>? seenBy,
     int? unreadCount,
+    String? lastMessageId,
   }) {
     return ChatModel(
       chatId: chatId ?? this.chatId,
@@ -50,6 +53,7 @@ class ChatModel {
       isGroup: isGroup ?? this.isGroup,
       seenBy: seenBy ?? this.seenBy,
       unreadCount: unreadCount ?? this.unreadCount,
+      lastMessageId: lastMessageId ?? this.lastMessageId,
     );
   }
 
@@ -65,11 +69,13 @@ class ChatModel {
       'isGroup': isGroup,
       'seenBy': seenBy,
       'unreadCount': unreadCount,
+      'lastMessageId': lastMessageId,
     };
   }
 
   factory ChatModel.fromMap(Map<String, dynamic> map, String chatId) {
     print("ChatModel.fromMap: $map");
+    print(map["seenBy"]);
     return ChatModel(
       chatId: chatId,
       name: map['name'] as String,
@@ -83,8 +89,16 @@ class ChatModel {
         map['lastMessageTime'] as int,
       ),
       isGroup: map['isGroup'] as bool,
+      lastMessageId: map['lastMessageId'] != null
+          ? map['lastMessageId'] as String
+          : '',
+
       seenBy: map['seenBy'] != null
-          ? List<String>.from(map['seenBy'] as List)
+          ? List<String>.from(
+              (map['seenBy'] as List)
+                  .where((e) => e != null)
+                  .map((e) => e.toString()),
+            )
           : [],
       unreadCount:
           map["unreadCounts"][Client.instance.id.toString()] as int? ?? 0,

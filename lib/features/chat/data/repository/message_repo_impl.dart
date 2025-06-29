@@ -23,12 +23,10 @@ class MessageRepoImpl implements MessageRepository {
   Future<Either<Failure, List<MessageModel>>> getMessages(String chatId) async {
     if (await networkInfo.isConnected) {
       try {
-        // return Right([]); // Return an empty list if no messages are found
         final messagesRef = firebaseDatabase.ref("messages/$chatId");
         final snapshot = await messagesRef.get();
+
         if (snapshot.exists) {
-          // Use a logging framework instead of print
-          // logger.i("snapshot exists: ${snapshot.value}");
           final Object? rawData = snapshot.value;
           final Map<String, dynamic> messagesData = (rawData is Map)
               ? rawData
@@ -112,13 +110,14 @@ class MessageRepoImpl implements MessageRepository {
         Map<String, dynamic> updatedCounts = {};
 
         for (final id in participantIds) {
-          final isSender = id == message.senderId.toString();
+          final isSender = id == message.senderId;
           final current = snapshot.child(id.toString()).value as int? ?? 0;
           updatedCounts[id.toString()] = isSender ? 0 : current + 1;
         }
 
         await chatRef.update({
           'lastMessage': message.text,
+          'lastMessageId': generatedId,
           'lastMessageTime': message.createdAt.millisecondsSinceEpoch,
           'unreadCounts': updatedCounts,
           'seenBy': [],
@@ -183,6 +182,54 @@ class MessageRepoImpl implements MessageRepository {
       }
     } else {
       return Left(ServerFailure(message: 'No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> setSeenBy(
+    String chatId,
+    String messageId,
+    String username,
+  ) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final messageRef = firebaseDatabase.ref("messages/$chatId/$messageId");
+        final snapshot = await messageRef.get();
+
+        final chatRef = firebaseDatabase.ref("chats/$chatId");
+        final unreadSnapshot = await chatRef.child('unreadCounts').get();
+
+        if (unreadSnapshot.exists) {
+          final data = Map<String, dynamic>.from(unreadSnapshot.value as Map);
+
+          final myId = Client.instance.id.toString();
+          final currentCount = data[myId] ?? 0;
+
+          // Decrease my unread count by 1, but not below 0
+          data[myId] = (currentCount > 0) ? currentCount - 1 : 0;
+
+          await chatRef.update({'unreadCounts': data});
+        }
+
+        if (snapshot.exists) {
+          final messageData = Map<String, dynamic>.from(snapshot.value as Map);
+          List<String> seenBy = List<String>.from(messageData['seenBy'] ?? []);
+
+          if (messageData['senderId'] != Client.instance.id &&
+              !seenBy.contains(username)) {
+            seenBy.add(username);
+            await messageRef.update({'seenBy': seenBy});
+          }
+          return Right(null);
+        } else {
+          return Left(ServerFailure(message: 'Message not found'));
+        }
+      } catch (e) {
+        print("Error setting seen by: $e");
+        return Left(ServerFailure(message: e.toString()));
+      }
+    } else {
+      return const Left(ServerFailure(message: 'No internet connection'));
     }
   }
 }

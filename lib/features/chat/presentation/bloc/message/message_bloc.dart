@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:lingo/features/chat/domain/entities/message_model.dart';
 import 'package:lingo/features/chat/domain/usecase/get_messages_usecase.dart';
 import 'package:lingo/features/chat/domain/usecase/listen_to_messages.dart';
+import 'package:lingo/features/chat/domain/usecase/mark_message_as_seen.dart';
 import 'package:lingo/features/chat/domain/usecase/send_messages_usecase.dart';
 import 'package:lingo/features/chat/domain/usecase/set_participating_status_usecase.dart';
 
@@ -14,11 +15,13 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
   final ListenToMessages listenToMessages;
   final SendMessagesUsecase sendMessagesUsecase;
   final SetParticipatingStatusUsecase setParticipatingStatusUsecase;
+  final MarkMessageAsSeenUsecase markMessageAsSeenUsecase;
   MessageBloc({
     required this.getMessagesUsecase,
     required this.listenToMessages,
     required this.sendMessagesUsecase,
     required this.setParticipatingStatusUsecase,
+    required this.markMessageAsSeenUsecase,
   }) : super(MessageInitial()) {
     on<GetMessagesEvent>((event, emit) async {
       emit(MessageLoading());
@@ -65,6 +68,23 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
         (_) {
           print(
             "Participating status set successfully for chat ${event.chatId}",
+          );
+        },
+      );
+    });
+    on<MarkMessageAsSeenEvent>((event, emit) async {
+      final result = await markMessageAsSeenUsecase(
+        event.chatId,
+        event.messageId,
+        event.username,
+      );
+      result.fold(
+        (failure) {
+          print("Error marking message as seen: ${failure.message}");
+        },
+        (_) {
+          print(
+            "Message ${event.messageId} marked as seen by ${event.username}",
           );
         },
       );

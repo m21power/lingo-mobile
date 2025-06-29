@@ -5,6 +5,7 @@ import 'package:lingo/core/constant/client_constant.dart';
 import 'package:lingo/features/chat/domain/entities/chat_model.dart';
 import 'package:lingo/features/chat/domain/entities/message_model.dart';
 import 'package:lingo/features/chat/presentation/bloc/message/message_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class BuildConversatioinBubble extends StatefulWidget {
   final MessageModel message;
@@ -26,8 +27,61 @@ class _BuildConversatioinBubbleState extends State<BuildConversatioinBubble> {
     return _buildMessageBubble(widget.message, context);
   }
 
+  bool isViewingChat = false;
+  @override
+  void initState() {
+    super.initState();
+    isViewingChat = true;
+  }
+
+  @override
+  void dispose() {
+    isViewingChat = false;
+    super.dispose();
+  }
+
+  void _redirectToTelegram(String username) async {
+    final Uri tgUrl = Uri.parse('tg://resolve?domain=$username');
+    final Uri httpsUrl = Uri.parse('https://t.me/$username');
+
+    try {
+      if (await canLaunchUrl(tgUrl)) {
+        await launchUrl(tgUrl, mode: LaunchMode.externalApplication);
+      } else if (await canLaunchUrl(httpsUrl)) {
+        await launchUrl(httpsUrl, mode: LaunchMode.externalApplication);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch Telegram')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
   Widget _buildMessageBubble(MessageModel message, BuildContext context) {
     final isMe = message.senderId == Client.instance.id;
+
+    if (!isMe) {
+      // Mark message as seen if the user is viewing the chat
+      if (isViewingChat && !message.seenBy.contains(Client.instance.username)) {
+        print(message.text);
+        context.read<MessageBloc>().add(
+          MarkMessageAsSeenEvent(
+            chatId: widget.chat.chatId,
+            messageId: message.id,
+            username: Client.instance.username ?? "Unknown",
+          ),
+        );
+      }
+    }
+    final isImageAvailable =
+        message.senderProfileImageUrl != null &&
+        message.senderProfileImageUrl!.isNotEmpty;
 
     if (message.isSystemMessage) {
       final bool iJoined = widget.message.isParticipating.contains(
@@ -146,7 +200,12 @@ class _BuildConversatioinBubbleState extends State<BuildConversatioinBubble> {
                   Center(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        // Start logic
+                        for (var username in widget.chat.participantUsernames) {
+                          if (username != Client.instance.username) {
+                            _redirectToTelegram(username);
+                            return;
+                          }
+                        }
                       },
                       icon: const Icon(Icons.call, color: Colors.white),
                       label: const Text(
@@ -185,54 +244,121 @@ class _BuildConversatioinBubbleState extends State<BuildConversatioinBubble> {
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.8,
         ),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: isMe
-                ? const Color.fromARGB(255, 87, 119, 145)
-                : Colors.grey[800],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: isMe
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!isMe)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: CircleAvatar(
-                        radius: 18,
-                        backgroundImage: NetworkImage(
-                          widget.chat.participantImages.first,
+        child: IntrinsicWidth(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isMe
+                  ? const Color.fromARGB(255, 87, 119, 145)
+                  : Colors.grey[800],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: isMe
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              children: [
+                // Username (only show for others)
+                if (!isMe)
+                  GestureDetector(
+                    onTap: () {
+                      _redirectToTelegram(widget.message.senderName);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        "@${widget.message.senderName}" ?? 'Unknown',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white70,
+                          fontSize: 12,
                         ),
-                        backgroundColor: Colors.grey[800],
-                        onBackgroundImageError: (_, __) =>
-                            const Icon(Icons.person),
                       ),
                     ),
-                  Flexible(
-                    child: Text(
-                      message.text,
-                      style: const TextStyle(color: Colors.white),
-                    ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 5),
-              Text(
-                "Seen by: ${message.seenBy.join(', ')}",
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
-              ),
-              Text(
-                DateFormat('hh:mm a').format(message.createdAt),
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
-              ),
-            ],
+                // Row with Avatar and Message Text
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!isMe)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: isImageAvailable
+                            ? CircleAvatar(
+                                radius: 18,
+                                backgroundImage: NetworkImage(
+                                  widget.message.senderProfileImageUrl!,
+                                ),
+                                backgroundColor: Colors.grey[800],
+                                onBackgroundImageError: (_, __) =>
+                                    const Icon(Icons.person),
+                              )
+                            : const CircleAvatar(
+                                radius: 18,
+                                backgroundColor: Colors.grey,
+                                child: Icon(Icons.person, color: Colors.white),
+                              ),
+                      ),
+                    Flexible(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          message.text,
+                          textAlign: TextAlign.left,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (message.seenBy.isNotEmpty)
+                      SizedBox(
+                        width: message.seenBy.length * 20.0, // Give it width
+                        height: 20,
+                        child: Stack(
+                          children: [
+                            for (int i = 0; i < message.seenBy.length; i++)
+                              message.seenBy[i] != Client.instance.username
+                                  ? Positioned(
+                                      left: i * 16,
+                                      child: CircleAvatar(
+                                        radius: 10,
+                                        backgroundColor: const Color.fromARGB(
+                                          255,
+                                          92,
+                                          90,
+                                          90,
+                                        ),
+                                        child: Text(
+                                          message.seenBy[i][0].toUpperCase(),
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : SizedBox(),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    Text(
+                      DateFormat('hh:mm a').format(message.createdAt),
+                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -245,7 +371,7 @@ class _BuildConversatioinBubbleState extends State<BuildConversatioinBubble> {
       child: Row(
         children: [
           Text(
-            "• $name",
+            "• @$name",
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,

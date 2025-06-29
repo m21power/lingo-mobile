@@ -5,7 +5,6 @@ import 'package:lingo/core/constant/client_constant.dart';
 import 'package:lingo/features/chat/domain/entities/chat_model.dart';
 import 'package:lingo/features/chat/domain/entities/message_model.dart';
 import 'package:lingo/features/chat/presentation/bloc/message/message_bloc.dart';
-import 'package:lingo/features/chat/presentation/pages/chat_page.dart';
 import 'package:lingo/features/chat/presentation/pages/conversation_page.dart';
 import 'package:lingo/features/chat/presentation/widgets/profile_picture.dart';
 
@@ -27,8 +26,9 @@ class BuildChatTile extends StatelessWidget {
               .entries
               .where(
                 (entry) =>
-                    entry.value.isNotEmpty &&
-                    entry.value != Client.instance.photoUrl,
+                    entry.value.trim().isNotEmpty &&
+                    entry.value.trim() !=
+                        (Client.instance.photoUrl ?? '').trim(),
               )
               .map((entry) => entry.value)
               .toList();
@@ -138,49 +138,37 @@ class BuildChatTile extends StatelessWidget {
                 height: 24,
                 child: Stack(
                   clipBehavior: Clip.hardEdge,
-                  children: chat.seenBy.isNotEmpty
-                      ? chat.seenBy.take(2).toList().asMap().entries.map((
-                          entry,
-                        ) {
-                          final i = entry.key;
-                          final viewer = entry.value;
-                          return Positioned(
-                            left: i * 12.0,
-                            child: CircleAvatar(
-                              radius: 10,
-                              backgroundColor: const Color.fromARGB(
-                                255,
-                                33,
-                                87,
-                                134,
-                              ),
-                              child: Text(
-                                viewer.isNotEmpty ? viewer[0] : '?',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                  children: chat.seenBy
+                      .where((name) => name != Client.instance.username)
+                      .take(2)
+                      .toList()
+                      .asMap()
+                      .entries
+                      .map((entry) {
+                        final i = entry.key;
+                        final viewer = entry.value;
+                        return Positioned(
+                          left: i * 12.0,
+                          child: CircleAvatar(
+                            radius: 10,
+                            backgroundColor: const Color.fromARGB(
+                              255,
+                              33,
+                              87,
+                              134,
                             ),
-                          );
-                        }).toList()
-                      : [
-                          const Positioned(
-                            left: 0,
-                            child: CircleAvatar(
-                              radius: 10,
-                              backgroundColor: Colors.transparent,
-                              child: Text(
-                                '',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.white,
-                                ),
+                            child: Text(
+                              viewer.isNotEmpty ? viewer[0] : '?',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
-                        ],
+                        );
+                      })
+                      .toList(),
                 ),
               ),
             ),

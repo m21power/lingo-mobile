@@ -5,6 +5,7 @@ class MessageModel {
   final String text;
   final String senderName;
   final int senderId;
+  final String? senderProfileImageUrl;
   final DateTime createdAt;
   final List<String> seenBy;
   final bool isSystemMessage;
@@ -19,6 +20,7 @@ class MessageModel {
     required this.seenBy,
     required this.isSystemMessage,
     required this.isParticipating,
+    this.senderProfileImageUrl,
   });
 
   MessageModel copyWith({
@@ -30,6 +32,7 @@ class MessageModel {
     List<String>? seenBy,
     bool? isSystemMessage,
     List<String>? isParticipating,
+    String? senderProfileImageUrl,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -40,6 +43,8 @@ class MessageModel {
       seenBy: seenBy ?? this.seenBy,
       isSystemMessage: isSystemMessage ?? this.isSystemMessage,
       isParticipating: isParticipating ?? this.isParticipating,
+      senderProfileImageUrl:
+          senderProfileImageUrl ?? this.senderProfileImageUrl,
     );
   }
 
@@ -53,6 +58,7 @@ class MessageModel {
       'seenBy': seenBy,
       'isSystemMessage': isSystemMessage,
       'isParticipating': isParticipating,
+      'senderProfileImageUrl': senderProfileImageUrl,
     };
   }
 
@@ -66,10 +72,12 @@ class MessageModel {
       senderId: map['senderId'] as int,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
       seenBy: map['seenBy'] != null ? List<String>.from(map['seenBy']) : [],
+      // seenBy: ["DMesay", "Shinra", "Filfilu"],
       isSystemMessage: map['isSystemMessage'] as bool? ?? false,
       isParticipating: map['isParticipating'] != null
           ? List<String>.from(map['isParticipating'])
           : [],
+      senderProfileImageUrl: map['senderProfileImageUrl'] as String?,
     );
   }
 
