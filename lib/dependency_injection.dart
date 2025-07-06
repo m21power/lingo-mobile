@@ -7,6 +7,7 @@ import 'package:lingo/features/auth/data/auth_repo_impl.dart';
 import 'package:lingo/features/auth/domain/repository/auth_repo.dart';
 import 'package:lingo/features/auth/domain/usecase/check_otp_usecase.dart';
 import 'package:lingo/features/auth/domain/usecase/is_logged_in_usecase.dart';
+import 'package:lingo/features/auth/domain/usecase/logout_usecase.dart';
 import 'package:lingo/features/auth/domain/usecase/wake_up_usecase.dart';
 import 'package:lingo/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:lingo/features/chat/data/repository/chat_repo_impl.dart';
@@ -30,6 +31,7 @@ import 'package:lingo/features/notifications/domain/usecase/pair_me_usecase.dart
 import 'package:lingo/features/notifications/presentation/bloc/notification_bloc.dart';
 import 'package:lingo/features/profile/data/repository/profile_repo_impl.dart';
 import 'package:lingo/features/profile/domain/repository/profile_repo.dart';
+import 'package:lingo/features/profile/domain/usecase/generate_daily_pair_usecase.dart';
 import 'package:lingo/features/profile/domain/usecase/get_consistency_usecase.dart';
 import 'package:lingo/features/profile/domain/usecase/get_ranks_usecase.dart';
 import 'package:lingo/features/profile/domain/usecase/get_user_usecase.dart';
@@ -63,12 +65,14 @@ Future<void> init() async {
     () => IsLoggedInUsecase(authRepo: sl()),
   );
   sl.registerLazySingleton<WakeUpUsecase>(() => WakeUpUsecase(authRepo: sl()));
+  sl.registerLazySingleton<LogoutUsecase>(() => LogoutUsecase(authRepo: sl()));
   // bloc
   sl.registerFactory<AuthBloc>(
     () => AuthBloc(
       checkOtpUsecase: sl(),
       isLoggedInUsecase: sl(),
       wakeUpUsecase: sl(),
+      logoutUsecase: sl(),
     ),
   );
 
@@ -95,6 +99,9 @@ Future<void> init() async {
   sl.registerLazySingleton<UpdateNicknameUsecase>(
     () => UpdateNicknameUsecase(profileRepo: sl()),
   );
+  sl.registerLazySingleton<GenerateDailyPairUsecase>(
+    () => GenerateDailyPairUsecase(profileRepo: sl()),
+  );
   // bloc
   sl.registerFactory<ProfileBloc>(
     () => ProfileBloc(
@@ -102,6 +109,7 @@ Future<void> init() async {
       getUserUsecase: sl(),
       getRanksUsecase: sl(),
       updateNicknameUsecase: sl(),
+      generateDailyPairUsecase: sl(),
     ),
   );
   // user bloc

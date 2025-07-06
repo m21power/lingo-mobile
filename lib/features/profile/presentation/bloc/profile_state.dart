@@ -65,3 +65,31 @@ final class ProfileUpdateNicknameState extends ProfileState {
   @override
   List<Object> get props => [message, ...super.props];
 }
+
+final class GenerateDailyPairSuccessState extends ProfileState {
+  final String message;
+
+  GenerateDailyPairSuccessState(
+    this.message,
+    List<RankEntities> ranks,
+    List<ConsistencyEntites> consistencies,
+    User? user,
+  ) : super(consistencies, ranks, user);
+
+  @override
+  List<Object> get props => [message, ...super.props];
+}
+
+final class GenerateDailyPairErrorState extends ProfileState {
+  final String message;
+
+  GenerateDailyPairErrorState(
+    this.message,
+    List<RankEntities> ranks,
+    List<ConsistencyEntites> consistencies,
+    User? user,
+  ) : super(consistencies, ranks, user);
+
+  @override
+  List<Object> get props => [message, ...super.props];
+}

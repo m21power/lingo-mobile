@@ -56,3 +56,7 @@ final class WakeUpLoadingState extends AuthState {
 final class WakeUpSuccessState extends AuthState {
   const WakeUpSuccessState();
 }
+
+final class LogoutSuccessState extends AuthState {
+  const LogoutSuccessState();
+}

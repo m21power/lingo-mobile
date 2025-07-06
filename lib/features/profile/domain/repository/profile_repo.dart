@@ -9,4 +9,5 @@ abstract class ProfileRepo {
   Future<Either<Failure, List<ConsistencyEntites>>> getConsistency(int? userId);
   Future<Either<Failure, User>> getUser(int? userId);
   Future<Either<Failure, void>> updateNickname(String nickname);
+  Future<Either<Failure, String>> generateDailyPair();
 }

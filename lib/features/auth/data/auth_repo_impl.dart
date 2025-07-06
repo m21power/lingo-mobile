@@ -93,4 +93,14 @@ class AuthRepoImpl implements AuthRepo {
       throw ServerFailure(message: 'No internet connection');
     }
   }
+
+  @override
+  Future<Either<Failure, void>> logout() async {
+    var result = await sharedPreferences.clear();
+    if (result) {
+      return Right(Void);
+    } else {
+      return Left(ServerFailure(message: 'Logout failed'));
+    }
+  }
 }

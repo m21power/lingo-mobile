@@ -89,6 +89,9 @@ class _ChatPageState extends State<ChatPage> {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: filteredChats.length,
                   itemBuilder: (context, index) {
+                    print(
+                      "Building chat tile for: ${filteredChats[index].participantIds}",
+                    );
                     return BuildChatTile(chat: filteredChats[index]);
                   },
                 ),

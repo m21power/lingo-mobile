@@ -21,3 +21,7 @@ final class UpdateNicknameEvent extends ProfileEvent {
 
   const UpdateNicknameEvent(this.nickname);
 }
+
+final class GenerateDailyPairEvent extends ProfileEvent {
+  const GenerateDailyPairEvent();
+}

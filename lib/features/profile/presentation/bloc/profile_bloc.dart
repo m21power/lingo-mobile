@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:lingo/features/auth/domain/entities/user.dart';
 import 'package:lingo/features/profile/domain/entites/consistency_entites.dart';
 import 'package:lingo/features/profile/domain/entites/rank_entities.dart';
+import 'package:lingo/features/profile/domain/usecase/generate_daily_pair_usecase.dart';
 import 'package:lingo/features/profile/domain/usecase/get_consistency_usecase.dart';
 import 'package:lingo/features/profile/domain/usecase/get_ranks_usecase.dart';
 import 'package:lingo/features/profile/domain/usecase/get_user_usecase.dart';
@@ -18,7 +19,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final UpdateNicknameUsecase updateNicknameUsecase;
   final GetUserUsecase getUserUsecase;
   final GetRanksUsecase getRanksUsecase;
+  final GenerateDailyPairUsecase generateDailyPairUsecase;
   List<ConsistencyEntites> consistencies = [];
+
   List<RankEntities> ranks = [];
   User? user;
   ProfileBloc({
@@ -26,6 +29,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     required this.getUserUsecase,
     required this.getRanksUsecase,
     required this.updateNicknameUsecase,
+    required this.generateDailyPairUsecase,
   }) : super(ProfileInitial()) {
     on<GetConsistencyEvent>((event, emit) async {
       emit(GetProfileLoadingState(ranks, consistencies, user));
@@ -83,6 +87,25 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
               consistencies,
               user,
             ),
+          );
+        },
+      );
+    });
+    on<GenerateDailyPairEvent>((event, emit) async {
+      emit(ProfileUpdateLoadingState(ranks, consistencies, user));
+      final result = await generateDailyPairUsecase();
+      result.fold(
+        (failure) => emit(
+          GenerateDailyPairErrorState(
+            failure.message,
+            ranks,
+            consistencies,
+            user,
+          ),
+        ),
+        (message) {
+          emit(
+            GenerateDailyPairSuccessState(message, ranks, consistencies, user),
           );
         },
       );

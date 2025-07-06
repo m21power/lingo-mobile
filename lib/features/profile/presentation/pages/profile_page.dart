@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lingo/core/constant/cache_manager.dart';
+import 'package:lingo/core/constant/client_constant.dart';
 import 'package:lingo/features/auth/domain/entities/user.dart';
 import 'package:lingo/features/profile/domain/entites/rank_entities.dart';
 import 'package:lingo/features/profile/presentation/bloc/profile_bloc.dart';
@@ -35,6 +36,7 @@ class _ProfilePageState extends State<ProfilePage>
     super.build(context); // Call super to ensure keep alive works
     return BlocConsumer<ProfileBloc, ProfileState>(
       listener: (context, profileState) {
+        print("Profile State: $profileState");
         if (profileState.user != null) {
           _nicknameController.text = profileState.user!.nickname ?? "Unknown";
           originalNickname = profileState.user!.nickname;
@@ -55,6 +57,22 @@ class _ProfilePageState extends State<ProfilePage>
             SnackBar(
               content: Text(profileState.message),
               backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+        if (profileState is GenerateDailyPairErrorState) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(profileState.message),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+        if (profileState is GenerateDailyPairSuccessState) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(profileState.message),
+              backgroundColor: Colors.green,
             ),
           );
         }
@@ -90,6 +108,43 @@ class _ProfilePageState extends State<ProfilePage>
         }
         return Scaffold(
           backgroundColor: const Color(0xFF121212),
+          appBar:
+              Client.instance.id == 5414247309 ||
+                  Client.instance.id == 5957099814
+              ? AppBar(
+                  backgroundColor: const Color(0xFF121212),
+                  actions: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        context.read<ProfileBloc>().add(
+                          GenerateDailyPairEvent(),
+                        );
+                      },
+                      icon: Icon(Icons.auto_awesome, color: Colors.white),
+                      label: Text(
+                        "Generate",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.tealAccent.shade700,
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : null,
           body: RefreshIndicator(
             onRefresh: () async {
               // Trigger the bloc events to refresh data

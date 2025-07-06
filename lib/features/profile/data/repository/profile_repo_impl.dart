@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
+import 'package:lingo/core/constant/api_constant.dart';
 import 'package:lingo/core/constant/client_constant.dart';
 import 'package:lingo/core/constant/shared_preference_constant.dart';
 import 'package:lingo/core/error/failure.dart';
@@ -252,6 +253,38 @@ class ProfileRepoImpl implements ProfileRepo {
         }
       } catch (e) {
         print('Error updating nickname: $e');
+        return Left(ServerFailure(message: e.toString()));
+      }
+    } else {
+      return Left(ServerFailure(message: 'No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> generateDailyPair() async {
+    if (await networkInfo.isConnected) {
+      try {
+        var uri = Uri.parse("${ApiConstant.baseUrl}/api/v1/user/generate-pair");
+        var response = await client.post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+        );
+        print("⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️");
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        if (response.statusCode == 200) {
+          var data = jsonDecode(response.body);
+          return Right(data["message"]);
+        } else {
+          return Left(
+            ServerFailure(
+              message:
+                  'Failed to generate daily pair, status code: ${response.statusCode}',
+            ),
+          );
+        }
+      } catch (e) {
+        print('Error generating daily pair: $e');
         return Left(ServerFailure(message: e.toString()));
       }
     } else {

@@ -18,3 +18,7 @@ final class IsLoggedInEvent extends AuthEvent {
 final class WakeUpEvent extends AuthEvent {
   const WakeUpEvent();
 }
+
+final class LogoutEvent extends AuthEvent {
+  const LogoutEvent();
+}

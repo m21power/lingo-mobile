@@ -7,4 +7,5 @@ abstract class AuthRepo {
   Future<Either<Failure, User>> checkOtp(String otp, String username);
   Future<Either<Failure, void>> IsLoggedIn();
   Future<void> wakeUp();
+  Future<Either<Failure, void>> logout();
 }
