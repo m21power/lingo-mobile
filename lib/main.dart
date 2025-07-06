@@ -7,6 +7,7 @@ import 'package:lingo/dependency_injection.dart';
 import 'package:lingo/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:lingo/features/chat/presentation/bloc/chat/chat_bloc.dart';
 import 'package:lingo/features/chat/presentation/bloc/message/message_bloc.dart';
+import 'package:lingo/features/notifications/presentation/bloc/notification_bloc.dart';
 import 'package:lingo/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:lingo/features/profile/presentation/bloc/user_bloc/user_bloc.dart';
 
@@ -34,6 +35,10 @@ class MainApp extends StatelessWidget {
         BlocProvider(create: (context) => sl<ProfileBloc>()),
         BlocProvider(create: (context) => sl<ChatBloc>()),
         BlocProvider(create: (context) => sl<MessageBloc>()),
+        BlocProvider(
+          create: (context) =>
+              sl<NotificationBloc>()..add(GetNotificationsEvent()),
+        ),
       ],
       child: MaterialApp.router(
         title: 'Lingo',

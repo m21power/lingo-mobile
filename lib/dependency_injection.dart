@@ -22,6 +22,12 @@ import 'package:lingo/features/chat/domain/usecase/send_messages_usecase.dart';
 import 'package:lingo/features/chat/domain/usecase/set_participating_status_usecase.dart';
 import 'package:lingo/features/chat/presentation/bloc/chat/chat_bloc.dart';
 import 'package:lingo/features/chat/presentation/bloc/message/message_bloc.dart';
+import 'package:lingo/features/notifications/data/repository/notification_repo_impl.dart';
+import 'package:lingo/features/notifications/domain/repository/notification_repo.dart';
+import 'package:lingo/features/notifications/domain/usecase/get_notification.dart';
+import 'package:lingo/features/notifications/domain/usecase/mark_notification_as_seen_usecase.dart';
+import 'package:lingo/features/notifications/domain/usecase/pair_me_usecase.dart';
+import 'package:lingo/features/notifications/presentation/bloc/notification_bloc.dart';
 import 'package:lingo/features/profile/data/repository/profile_repo_impl.dart';
 import 'package:lingo/features/profile/domain/repository/profile_repo.dart';
 import 'package:lingo/features/profile/domain/usecase/get_consistency_usecase.dart';
@@ -160,6 +166,29 @@ Future<void> init() async {
       sendMessagesUsecase: sl(),
       setParticipatingStatusUsecase: sl(),
       markMessageAsSeenUsecase: sl(),
+    ),
+  );
+  // notifications
+  // repository
+  sl.registerLazySingleton<NotificationRepo>(
+    () => NotificationRepoImpl(networkInfo: sl(), client: sl()),
+  );
+  // usecases
+  sl.registerLazySingleton<GetNotificationUsecase>(
+    () => GetNotificationUsecase(notificationRepo: sl()),
+  );
+  sl.registerLazySingleton<MarkNotificationAsSeenUsecase>(
+    () => MarkNotificationAsSeenUsecase(notificationRepo: sl()),
+  );
+  sl.registerLazySingleton<PairMeUsecase>(
+    () => PairMeUsecase(notificationRepo: sl()),
+  );
+  // bloc
+  sl.registerFactory<NotificationBloc>(
+    () => NotificationBloc(
+      getNotificationUsecase: sl(),
+      markNotificationAsSeenUsecase: sl(),
+      pairMeUsecase: sl(),
     ),
   );
 }

@@ -25,25 +25,34 @@ class ConversationPage extends StatefulWidget {
 class _ConversationPageState extends State<ConversationPage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _messageController = TextEditingController();
+  final Map<String, GlobalKey> _messageKeys = {};
 
-  void scrollToSystemMessage(List<MessageModel> messages) {
-    final index = messages.indexWhere((msg) => msg.isSystemMessage == true);
-    if (index != -1) {
-      _scrollController.animateTo(
-        index * 90,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
+  void scrollToSystemMessage(List<MessageModel> messages) async {
+    for (int i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].isSystemMessage) {
+        final key = _messageKeys[messages[i].id];
+        if (key != null) {
+          // Step 1: Scroll near the item first
+          _scrollController.animateTo(
+            i * 100.0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
 
-  void _launchTelegram() async {
-    const telegramUrl = 'https://t.me/shinratensei_all'; // your channel
-    if (await canLaunchUrl(Uri.parse(telegramUrl))) {
-      await launchUrl(
-        Uri.parse(telegramUrl),
-        mode: LaunchMode.externalApplication,
-      );
+          // Step 2: Wait a little to allow widget to build
+          await Future.delayed(const Duration(milliseconds: 350));
+
+          // Step 3: Now ensure visible
+          if (key.currentContext != null) {
+            Scrollable.ensureVisible(
+              key.currentContext!,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+        }
+        break;
+      }
     }
   }
 
@@ -136,11 +145,23 @@ class _ConversationPageState extends State<ConversationPage> {
                         : ListView.builder(
                             controller: _scrollController,
                             itemCount: messages.length,
-                            itemBuilder: (context, index) =>
-                                BuildConversatioinBubble(
-                                  message: messages[index],
+                            itemBuilder: (context, index) {
+                              final message = messages[index];
+
+                              // Assign a key if not already assigned
+                              _messageKeys.putIfAbsent(
+                                message.id,
+                                () => GlobalKey(),
+                              );
+
+                              return Container(
+                                key: _messageKeys[message.id],
+                                child: BuildConversatioinBubble(
+                                  message: message,
                                   chat: widget.chat,
                                 ),
+                              );
+                            },
                           ),
                   ),
 

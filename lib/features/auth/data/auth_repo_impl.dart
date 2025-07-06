@@ -75,6 +75,7 @@ class AuthRepoImpl implements AuthRepo {
       print("No user found in shared preferences");
     }
     if (isLoggedIn == true) {
+      await Client.initFromPrefs();
       return Future.value(Right(Void));
     } else {
       return Left(ServerFailure(message: 'User is not logged in'));
