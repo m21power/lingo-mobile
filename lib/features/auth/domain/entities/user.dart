@@ -50,8 +50,6 @@ class User {
     };
   }
 
-  // {user: {id: 5957099814, username: DMesay, photoUrl: https://res.cloudinary.com/dl6vahv6t/image/upload/v1750591236/profile_2309847305_kfm5r6.jpg,
-  // missCount: 0, attendance: 0, missPercentage: 0, createdAt: }}
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
       id: map['id'] as int,

@@ -6,7 +6,7 @@ import 'package:lingo/features/chat/domain/repository/chat_repository.dart';
 class GetChatsUsecase {
   final ChatRepository chatRepository;
   GetChatsUsecase({required this.chatRepository});
-  Future<Either<Failure, List<ChatModel>>> call() {
+  Future<Either<Failure, Chat>> call() {
     return chatRepository.getChats();
   }
 }

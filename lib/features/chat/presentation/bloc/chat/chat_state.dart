@@ -1,25 +1,24 @@
 part of 'chat_bloc.dart';
 
 sealed class ChatState extends Equatable {
-  final List<ChatModel> chatList;
-  ChatState({required this.chatList});
+  final Chat chat;
+  ChatState({required this.chat});
 
   @override
-  List<Object> get props => [chatList];
+  List<Object> get props => [chat];
 }
 
 final class ChatInitial extends ChatState {
-  ChatInitial() : super(chatList: []);
+  ChatInitial() : super(chat: Chat(chats: [], unreadCount: 0));
 }
 
 final class GetChatsSuccessState extends ChatState {
-  GetChatsSuccessState({required List<ChatModel> chatList})
-    : super(chatList: chatList);
+  GetChatsSuccessState({required Chat chat}) : super(chat: chat);
 }
 
 final class GetChatsFailureState extends ChatState {
   final String message;
-  final List<ChatModel> chatList;
-  GetChatsFailureState({required this.message, required this.chatList})
-    : super(chatList: chatList);
+  final Chat chat;
+  GetChatsFailureState({required this.message, required this.chat})
+    : super(chat: chat);
 }

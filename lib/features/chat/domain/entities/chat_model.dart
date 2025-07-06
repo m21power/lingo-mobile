@@ -77,17 +77,20 @@ class ChatModel {
     };
   }
 
-  factory ChatModel.fromMap(Map<String, dynamic> map, String chatId) {
+  factory ChatModel.fromMap(
+    Map<String, dynamic> map,
+    String chatId,
+    List<String> participantUsernames,
+    List<String> participantImages,
+  ) {
     print("ChatModel.fromMap: $map");
     print(map["seenBy"]);
     return ChatModel(
       chatId: chatId,
       name: map['name'] as String,
-      participantUsernames: List<String>.from(
-        map['participantUsernames'] as List,
-      ),
+      participantUsernames: participantUsernames,
       participantIds: List<int>.from(map['participantIds'] as List),
-      participantImages: List<String>.from(map['participantImages'] as List),
+      participantImages: participantImages,
       lastMessage: map['lastMessage'] as String,
       lastMessageTime: DateTime.fromMillisecondsSinceEpoch(
         map['lastMessageTime'] as int,
@@ -116,4 +119,10 @@ class ChatModel {
 
   // factory ChatModel.fromJson(String source) =>
   //     ChatModel.fromMap(json.decode(source) as Map<String, dynamic>);
+}
+
+class Chat {
+  List<ChatModel> chats;
+  int unreadCount;
+  Chat({required this.chats, required this.unreadCount});
 }

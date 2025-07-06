@@ -31,7 +31,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return BlocBuilder<ChatBloc, ChatState>(
       builder: (context, state) {
-        final allChats = state.chatList;
+        final allChats = state.chat.chats;
 
         final filteredChats = _isSearching
             ? allChats

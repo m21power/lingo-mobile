@@ -72,7 +72,6 @@ class MessageModel {
       senderId: map['senderId'] as int,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
       seenBy: map['seenBy'] != null ? List<String>.from(map['seenBy']) : [],
-      // seenBy: ["DMesay", "Shinra", "Filfilu"],
       isSystemMessage: map['isSystemMessage'] as bool? ?? false,
       isParticipating: map['isParticipating'] != null
           ? List<String>.from(map['isParticipating'])

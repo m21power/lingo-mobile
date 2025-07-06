@@ -124,6 +124,7 @@ Future<void> init() async {
   // repository
   sl.registerLazySingleton<ChatRepository>(
     () => ChatRepoImpl(
+      firestore: sl(),
       firebaseDatabase: sl(),
       networkInfo: sl(),
       sharedPreferences: sl(),

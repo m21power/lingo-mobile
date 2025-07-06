@@ -5,6 +5,7 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:lingo/features/About/presentation/pages/about_page.dart';
 import 'package:lingo/features/About/presentation/pages/rules_page.dart';
 import 'package:lingo/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:lingo/features/chat/presentation/bloc/chat/chat_bloc.dart';
 import 'package:lingo/features/chat/presentation/pages/chat_page.dart';
 import 'package:lingo/features/notifications/presentation/bloc/notification_bloc.dart';
 import 'package:lingo/features/notifications/presentation/pages/notification_page.dart';
@@ -137,81 +138,128 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: BlocBuilder<NotificationBloc, NotificationState>(
                   builder: (context, notifState) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 10,
-                      ),
-                      child: GNav(
-                        backgroundColor: Colors.transparent,
-                        color: Colors.grey[400],
-                        activeColor: Colors.white,
-                        iconSize: 24,
-                        tabBorderRadius: 16,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        tabBackgroundColor: Colors.blueAccent.withOpacity(0.5),
-                        textStyle: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        gap: 8,
-                        selectedIndex: _selectedIndex,
-                        onTabChange: (index) =>
-                            setState(() => _selectedIndex = index),
-                        tabs: [
-                          GButton(icon: Icons.person, text: 'Profile'),
-                          GButton(icon: Icons.chat, text: 'Chat'),
-                          GButton(
-                            icon: Icons.notifications_active,
-                            text: 'Alerts',
-                            leading: Stack(
-                              children: [
-                                Icon(
-                                  Icons.notifications_active,
-                                  color: Colors.grey[400],
-                                  size: 24,
-                                ), // base icon
-                                notifState.notificationReponse.unseenCount > 0
-                                    ? Positioned(
-                                        right: -2,
-                                        top: -2,
-                                        child: Container(
-                                          padding: EdgeInsets.all(2),
-                                          decoration: BoxDecoration(
-                                            color: Colors.red,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          constraints: BoxConstraints(
-                                            minWidth: 15,
-                                            minHeight: 15,
-                                          ),
-                                          child: Text(
-                                            notifState
-                                                        .notificationReponse
-                                                        .unseenCount >
-                                                    9
-                                                ? '9+'
-                                                : notifState
-                                                      .notificationReponse
-                                                      .unseenCount
-                                                      .toString(),
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                      )
-                                    : SizedBox(),
-                              ],
-                            ),
+                    return BlocBuilder<ChatBloc, ChatState>(
+                      builder: (context, chatState) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 10,
                           ),
-                        ],
-                      ),
+                          child: GNav(
+                            backgroundColor: Colors.transparent,
+                            color: Colors.grey[400],
+                            activeColor: Colors.white,
+                            iconSize: 24,
+                            tabBorderRadius: 16,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            tabBackgroundColor: Colors.blueAccent.withOpacity(
+                              0.5,
+                            ),
+                            textStyle: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            gap: 8,
+                            selectedIndex: _selectedIndex,
+                            onTabChange: (index) =>
+                                setState(() => _selectedIndex = index),
+                            tabs: [
+                              GButton(icon: Icons.person, text: 'Profile'),
+                              GButton(
+                                icon: Icons.chat,
+                                text: 'Chat',
+                                leading: Stack(
+                                  children: [
+                                    Icon(
+                                      Icons.chat,
+                                      color: Colors.grey[400],
+                                      size: 24,
+                                    ), // base icon
+                                    chatState.chat.unreadCount > 0
+                                        ? Positioned(
+                                            right: -2,
+                                            top: -2,
+                                            child: Container(
+                                              padding: EdgeInsets.all(2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.red,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              constraints: BoxConstraints(
+                                                minWidth: 15,
+                                                minHeight: 15,
+                                              ),
+                                              child: Text(
+                                                chatState.chat.unreadCount > 9
+                                                    ? '9+'
+                                                    : chatState.chat.unreadCount
+                                                          .toString(),
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                          )
+                                        : SizedBox(),
+                                  ],
+                                ),
+                              ),
+                              GButton(
+                                icon: Icons.notifications_active,
+                                text: 'Alerts',
+                                leading: Stack(
+                                  children: [
+                                    Icon(
+                                      Icons.notifications_active,
+                                      color: Colors.grey[400],
+                                      size: 24,
+                                    ), // base icon
+                                    notifState.notificationReponse.unseenCount >
+                                            0
+                                        ? Positioned(
+                                            right: -2,
+                                            top: -2,
+                                            child: Container(
+                                              padding: EdgeInsets.all(2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.red,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              constraints: BoxConstraints(
+                                                minWidth: 15,
+                                                minHeight: 15,
+                                              ),
+                                              child: Text(
+                                                notifState
+                                                            .notificationReponse
+                                                            .unseenCount >
+                                                        9
+                                                    ? '9+'
+                                                    : notifState
+                                                          .notificationReponse
+                                                          .unseenCount
+                                                          .toString(),
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                          )
+                                        : SizedBox(),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     );
                   },
                 ),

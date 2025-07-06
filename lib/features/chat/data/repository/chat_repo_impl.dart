@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:lingo/core/constant/client_constant.dart';
@@ -12,15 +13,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatRepoImpl implements ChatRepository {
   final FirebaseDatabase firebaseDatabase;
+  final FirebaseFirestore firestore;
   final NetworkInfo networkInfo;
   final SharedPreferences sharedPreferences;
   ChatRepoImpl({
     required this.firebaseDatabase,
     required this.networkInfo,
     required this.sharedPreferences,
+    required this.firestore,
   });
   @override
-  Future<Either<Failure, List<ChatModel>>> getChats() async {
+  Future<Either<Failure, Chat>> getChats() async {
     if (await networkInfo.isConnected) {
       try {
         final userChatIdsRef = firebaseDatabase.ref(
@@ -46,13 +49,28 @@ class ChatRepoImpl implements ChatRepository {
                 .get();
 
             final messageData = messageSnapshot.value as Map<dynamic, dynamic>?;
-
+            List<String> participantUsernames = [];
+            List<String> participantImages = [];
             chats["seenBy"] = messageData?["seenBy"] ?? [];
+
+            // Fetch user data synchronously
+            for (var userId in chats["participantIds"]) {
+              print("Fetching user data for ID: $userId");
+
+              final userDoc = await firestore.doc("users/$userId").get();
+              if (userDoc.exists) {
+                final userData = userDoc.data() as Map<String, dynamic>;
+                participantUsernames.add(userData["username"]);
+                participantImages.add(userData["profileUrl"]);
+              }
+            }
 
             allChats.add(
               ChatModel.fromMap(
                 chats as Map<String, dynamic>, // safe to cast now
                 chatId,
+                participantUsernames,
+                participantImages,
               ),
             );
           }
@@ -63,8 +81,11 @@ class ChatRepoImpl implements ChatRepository {
         }
         // Sort chats by last message time in descending order
         allChats.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
-
-        return Right(allChats);
+        int unreadCount = 0;
+        for (var chat in allChats) {
+          unreadCount += chat.unreadCount;
+        }
+        return Right(Chat(chats: allChats, unreadCount: unreadCount));
       } catch (e) {
         return Left(ServerFailure(message: e.toString()));
       }
@@ -74,7 +95,7 @@ class ChatRepoImpl implements ChatRepository {
   }
 
   @override
-  Stream<List<ChatModel>> listenToChats() async* {
+  Stream<Chat> listenToChats() async* {
     final userChatIdsRef = firebaseDatabase.ref(
       "userChats/${Client.instance.id.toString()}",
     );
@@ -83,12 +104,12 @@ class ChatRepoImpl implements ChatRepository {
     final chatIds = (chatIdsSnapshot.value as Map?)?.keys.toList() ?? [];
 
     if (chatIds.isEmpty) {
-      yield []; // No chats
+      yield Chat(chats: [], unreadCount: 0); // No chats
       return;
     }
 
     // Create a controller to emit chat updates
-    final controller = StreamController<List<ChatModel>>();
+    final controller = StreamController<Chat>();
 
     final List<ChatModel> chats = [];
 
@@ -102,7 +123,7 @@ class ChatRepoImpl implements ChatRepository {
           firebaseDatabase
               .ref("messages/$chatId/${chatData["lastMessageId"]}")
               .onValue
-              .listen((messageEvent) {
+              .listen((messageEvent) async {
                 if (messageEvent.snapshot.exists) {
                   final messageData = Map<String, dynamic>.from(
                     messageEvent.snapshot.value as Map,
@@ -111,8 +132,24 @@ class ChatRepoImpl implements ChatRepository {
                 } else {
                   chatData["seenBy"] = [];
                 }
+                List<String> participantUsernames = [];
+                List<String> participantImages = [];
+                for (var userId in chatData["participantIds"]) {
+                  print("Fetching user data for ID: $userId");
 
-                final chat = ChatModel.fromMap(chatData, chatId);
+                  var userDoc = await firestore.doc("users/$userId").get();
+                  if (userDoc.exists) {
+                    final userData = userDoc.data() as Map<String, dynamic>;
+                    participantUsernames.add(userData["username"]);
+                    participantImages.add(userData["profileUrl"]);
+                  }
+                }
+                final chat = ChatModel.fromMap(
+                  chatData,
+                  chatId,
+                  participantUsernames,
+                  participantImages,
+                );
 
                 final index = chats.indexWhere((c) => c.chatId == chat.chatId);
                 if (index >= 0) {
@@ -120,8 +157,16 @@ class ChatRepoImpl implements ChatRepository {
                 } else {
                   chats.add(chat);
                 }
-
-                controller.add(List.from(chats));
+                int unreadCount = 0;
+                for (var chat in chats) {
+                  unreadCount += chat.unreadCount;
+                }
+                controller.add(
+                  Chat(
+                    chats: List<ChatModel>.from(chats),
+                    unreadCount: unreadCount,
+                  ),
+                );
               });
         }
       });

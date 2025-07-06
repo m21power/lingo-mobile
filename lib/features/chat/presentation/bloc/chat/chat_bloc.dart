@@ -10,27 +10,26 @@ part 'chat_state.dart';
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final GetChatsUsecase getChatsUsecase;
   final ListenToChatUsecase listenToChatUsecase;
-  List<ChatModel> chatList = [];
+  Chat chat = Chat(chats: [], unreadCount: 0);
   ChatBloc({required this.getChatsUsecase, required this.listenToChatUsecase})
     : super(ChatInitial()) {
     on<GetChatsEvent>((event, emit) async {
       final result = await getChatsUsecase();
       result.fold(
-        (failure) => emit(
-          GetChatsFailureState(message: failure.message, chatList: chatList),
-        ),
+        (failure) =>
+            emit(GetChatsFailureState(message: failure.message, chat: chat)),
         (chats) {
-          chatList = chats;
-          emit(GetChatsSuccessState(chatList: chatList));
+          chat = chats;
+          emit(GetChatsSuccessState(chat: chat));
         },
       );
     });
     on<ListenToChatEvent>((event, emit) async {
-      await emit.forEach<List<ChatModel>>(
+      await emit.forEach<Chat>(
         listenToChatUsecase(),
         onData: (chats) {
-          chatList = chats;
-          return GetChatsSuccessState(chatList: chatList);
+          chat = chats;
+          return GetChatsSuccessState(chat: chat);
         },
       );
     });
